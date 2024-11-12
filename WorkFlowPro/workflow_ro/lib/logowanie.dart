@@ -16,8 +16,8 @@ class logowanieScreen extends StatefulWidget {
 }
 
 class _logowanieScreenState extends State<logowanieScreen> {
-  TextEditingController login = TextEditingController(text: "patrycjajurkiewicz@gmail.com");
-  TextEditingController pass = TextEditingController(text: "haslo123");
+  TextEditingController login = TextEditingController(text: "madebysnl@gmail.com");
+  TextEditingController pass = TextEditingController(text: "Qwerty123!@#");
 
   static Future<User?> loginUsingEmailPassword(
       {required String email,

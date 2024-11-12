@@ -5,14 +5,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:workflow_ro/logowanie.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:workflow_ro/main.dart';
+
+
+
+Color lightThemeBackground = const Color.fromARGB(255, 251, 254, 249);
+Color lightThemeText = const Color.fromARGB(255, 0, 0, 4);
+
+Color darkThemeBackground = const Color.fromARGB(255, 0, 0, 4);
+Color darkThemeText = const Color.fromARGB(255, 251, 254, 249);
 
 TextStyle Oswald([TextStyle TS = const TextStyle()]) {
   TextStyle ret = GoogleFonts.oswald(textStyle: TS);
   return ret;
 }
 
-//Funkcja znajduje nazwe uzytkownika w firestore uzywajac przy tym emailu zalogowanego uzytkownika
 Future<String> userToUsername(User user) async {
   final usersBase = db.collection("uzytkownicy");
   final userProf = usersBase.doc(user.email);
@@ -24,17 +31,20 @@ Future<String> userToUsername(User user) async {
   return usrname;
 }
 
-ListTile tab(String title, Icon leading) {
+ListTile tab(String title, Icon leading, [List<Widget>? childrenz ]) {
   ListTile ret = ListTile(
     title: ExpansionTile(
+      
       leading: leading,
         title: Text(
       title,
       
       style: Oswald(
-        TextStyle(fontWeight: FontWeight.w800),
+        TextStyle(fontWeight: FontWeight.w800,color: textColor),
       ),
-    )),
+    ),
+    children: (childrenz == null)? <Widget>[] : childrenz
+    ),
   );
 
   return ret;

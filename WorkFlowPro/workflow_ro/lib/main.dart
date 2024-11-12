@@ -15,6 +15,8 @@ Color primShade  = const Color.fromARGB(255, 5, 0, 146);
 Color secColor   = const Color.fromARGB(255, 73, 77, 80);
 Color background = const Color.fromARGB(255, 251, 254, 249);
 Color textColor  = const Color.fromARGB(255, 0, 0, 4);
+
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
