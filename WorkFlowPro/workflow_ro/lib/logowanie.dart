@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:workflow_ro/userProfile.dart';
+import 'package:workflow_ro/registerComany.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -123,7 +123,7 @@ class _logowanieScreenState extends State<logowanieScreen> {
                             Navigator.push(
                               context,
                               PageRouteBuilder(
-                                pageBuilder: (c, a1, a2) => profileScreen(
+                                pageBuilder: (c, a1, a2) => registerCompScreen(
                                   user: user,
                                 ),
                                 transitionsBuilder: (c, anim, a2, child) =>

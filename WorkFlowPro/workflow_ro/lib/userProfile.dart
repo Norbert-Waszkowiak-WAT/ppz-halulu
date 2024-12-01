@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:workflow_ro/fav.dart';
+import 'package:workflow_ro/logowanie.dart';
 import 'package:workflow_ro/main.dart';
 import 'package:invert_colors/invert_colors.dart';
+import 'package:workflow_ro/registerComany.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -38,14 +40,8 @@ class _profileScreenState extends State<profileScreen> {
     return SafeArea(
       child: Scaffold(
           backgroundColor: background,
-          appBar: AppBar(
-              title: Text(
-                "Profil",
-                style: Oswald(),
-              ),
-              centerTitle: true,
-              backgroundColor: background,
-              elevation: 2),
+          appBar:
+              defaultAppBar(context, registerCompScreen(user: user), "Profil"),
           body: Container(
             width: screenWidth,
             child: Column(
@@ -155,20 +151,33 @@ class _profileScreenState extends State<profileScreen> {
                 SizedBox(
                   height: screenHeight * 0.11,
                 ),
-                Container(
-                  alignment: Alignment.center,
-                  width: screenWidth * 0.8,
-                  height: screenHeight * 0.08,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.red,
-                      border: Border.all(color: secColor, width: 1)),
-                  child: Text(
-                    "Wyloguj",
-                    style: Oswald(TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 32,
-                        color: textColor)),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (c, a1, a2) => logowanieScreen(),
+                        transitionsBuilder: (c, anim, a2, child) =>
+                            FadeTransition(opacity: anim, child: child),
+                        transitionDuration: Duration(milliseconds: 500),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    alignment: Alignment.center,
+                    width: screenWidth * 0.8,
+                    height: screenHeight * 0.08,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.red,
+                        border: Border.all(color: secColor, width: 1)),
+                    child: Text(
+                      "Wyloguj",
+                      style: Oswald(TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 32,
+                          color: textColor)),
+                    ),
                   ),
                 )
               ],
