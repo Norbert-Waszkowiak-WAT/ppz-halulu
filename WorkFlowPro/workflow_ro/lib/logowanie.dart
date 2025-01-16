@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:workflow_ro/registerComany.dart';
+import 'package:workflow_ro/registerCompany.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -114,6 +114,8 @@ class _logowanieScreenState extends State<logowanieScreen> {
                           context: context);
 
                       if (user != null) {
+                        localUser = await userToUserData(user);
+                        print(user);
                         final usersBase = db.collection("uzytkownicy");
                         final userProf = usersBase.doc(login.text);
                         userProf.get().then((DocumentSnapshot doc) {

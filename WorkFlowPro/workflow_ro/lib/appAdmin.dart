@@ -25,11 +25,6 @@ class _appAdminScreenState extends State<appAdminScreen> {
 
   @override
   void initState() {
-    userToUsername(user).then((result) {
-      setState(() {
-        username = result;
-      });
-    });
     super.initState();
   }
 

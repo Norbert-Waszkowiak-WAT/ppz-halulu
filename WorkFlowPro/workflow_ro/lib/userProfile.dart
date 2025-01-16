@@ -5,7 +5,7 @@ import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/logowanie.dart';
 import 'package:workflow_ro/main.dart';
 import 'package:invert_colors/invert_colors.dart';
-import 'package:workflow_ro/registerComany.dart';
+import 'package:workflow_ro/registerCompany.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -27,11 +27,9 @@ class _profileScreenState extends State<profileScreen> {
 
   @override
   void initState() {
-    userToUsername(user).then((result) {
-      setState(() {
-        username = result;
-      });
-    });
+    
+    username = localUser!.username;
+     
     super.initState();
   }
 

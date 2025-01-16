@@ -1,5 +1,9 @@
 //Functions And Variabes
 //przeróżne funkcje i zmienne tutaj, zeby byl wiekszy porzadek
+// ignore_for_file: unused_import
+
+import 'dart:ffi';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,16 +22,34 @@ TextStyle Oswald([TextStyle TS = const TextStyle()]) {
   return ret;
 }
 
-Future<String> userToUsername(User user) async {
-  final usersBase = db.collection("uzytkownicy");
-  final userProf = usersBase.doc(user.email);
-  String usrname = "";
-  await userProf.get().then((DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    usrname = data["username"] as String;
-  });
-  return usrname;
+class localUserData {
+  String username;
+  String email;
+  bool admin = false;
+  String nazwaFirmy;
+  int numerKontaktowy;
+  String stanowisko;
+  localUserData(this.username, this.email, this.nazwaFirmy,
+      this.numerKontaktowy, this.stanowisko,
+      {this.admin = false});
 }
+
+Future<localUserData> userToUserData(User user) async {
+  DocumentSnapshot userDoc =
+      await db.collection("uzytkownicy").doc(user.email).get();
+  localUserData ret = localUserData(
+      userDoc["Login"],
+      userDoc["Adres Email"],
+      userDoc["Nazwa Firmy"],
+      userDoc["Numer Kontaktowy"],
+      userDoc["Stanowisko"],
+      admin: (userDoc["Administrator"] == "true") ? true : false);
+
+  return ret;
+}
+
+//zmienna przechowująca dane zalogowanego uzytkownika; działa poprawnie dopiero po zalogowaniu
+localUserData? localUser;
 
 ListTile tab(String title, Icon leading, [List<Widget>? childrenz]) {
   ListTile ret = ListTile(
@@ -70,34 +92,41 @@ AppBar defaultAppBar(context, screen, String title) {
 
 class formField {
   String fieldName;
+  String type = "S";
   bool required;
   bool obscured = false;
+  TextEditingController inpCtrl = TextEditingController();
   int maxLen = 32;
-  formField(this.fieldName, this.required,
+  formField(this.fieldName, this.required, this.type,
       {this.obscured = false, this.maxLen = 32});
 }
 
 List<formField> orgFormFields = [
-  (formField("Adres Firmy", true)),
-  (formField("Email Kontaktowy", true)),
-  (formField("Numer Kontaktowy", true)),
-  (formField("Adres Strony", false)),
-  (formField("NIP/REGON", false)),
-  (formField("Rodzaj Działalności", false)),
+  (formField("Adres Firmy", true, 'S')),
+  (formField("Email Kontaktowy", true, 'S')),
+  (formField("Numer Kontaktowy", true, 'I')),
+  (formField("Adres Strony", false, 'S')),
+  (formField("NIP/REGON", false, 'I')),
+  (formField("Rodzaj Działalności", false, 'S')),
 ];
 
 List<formField> adminFormFields = [
-  (formField("Login", true)),
-  (formField("Hasło", true, obscured: true)),
-  (formField("Adres Email", true)),
-  (formField("Numer Kontaktowy", false)),
-  (formField("Stanowisko", true)),
+  (formField("Login", true, 'S')),
+  (formField("Hasło", true, obscured: true, 'S')),
+  (formField("Adres Email", true, 'S')),
+  (formField("Numer Kontaktowy", false, 'I')),
+  (formField("Stanowisko", true, 'S')),
 ];
 
-Column form(
-  String title,
-  List<formField> fieldsList
-) {
+List<formField> userFormFields = [
+  (formField("Login", true, 'S')),
+  (formField("Hasło", true, obscured: true, 'S')),
+  (formField("Adres Email", true, 'S')),
+  (formField("Numer Kontaktowy", false, 'I')),
+  (formField("Stanowisko", true, 'S')),
+];
+
+Column form(String title, List<formField> fieldsList) {
   return Column(children: [
     Container(
       decoration: BoxDecoration(
@@ -123,6 +152,7 @@ Column form(
           textAlign: TextAlign.center,
           decoration: InputDecoration(
               hintText: field.fieldName, border: InputBorder.none),
+          controller: field.inpCtrl,
         ),
       ),
       SizedBox(
@@ -130,4 +160,92 @@ Column form(
       ),
     ],
   ]);
+}
+
+Map<String, dynamic> formToMap(List<formField> form) {
+  final Map<String, dynamic> ret = {};
+  for (var field in form) {
+    if (field.type == "S") {
+      ret[field.fieldName] = field.inpCtrl.text;
+    } else if (field.type == "I") {
+      ret[field.fieldName] = int.parse(field.inpCtrl.text);
+    } else if (field.type == "B") {
+      ret[field.fieldName] = (field.inpCtrl.text == '1') ? true : false;
+    } else
+      ret[field.fieldName] = field.inpCtrl.text;
+  }
+  return ret;
+}
+
+bool addUserToOrg(
+    FirebaseFirestore db, String compName, List<formField> UserData) {
+  try {
+    db
+        .collection("organizacje")
+        .doc(compName)
+        .collection("users")
+        .doc(UserData[0].inpCtrl.text)
+        .set(formToMap(UserData));
+  } catch (e) {
+    print(e);
+    return false;
+  }
+  return true;
+}
+
+bool addUserToCompany(
+    FirebaseFirestore db1, String compName, List<formField> UserData) {
+  List<formField> usersUpdate = [];
+  for (var f in UserData) {
+    usersUpdate.add(f);
+  }
+  //dodawanie pól niezbędnych w bazie a niezaleznych od inputu uzytkownika
+  usersUpdate.add(formField("wfp_admin", false, "B"));
+  usersUpdate[usersUpdate.length - 1].inpCtrl.text = "0";
+  usersUpdate.add(formField("Nazwa Firmy", false, "S"));
+  usersUpdate[usersUpdate.length - 1].inpCtrl.text = compName;
+  usersUpdate.add(formField("Administrator", false, "B"));
+  usersUpdate[usersUpdate.length - 1].inpCtrl.text = "0";
+
+  try {
+    db1
+        .collection("organizacje")
+        .doc(localUser!.nazwaFirmy)
+        .collection("users")
+        .doc(UserData[0].inpCtrl.text)
+        .set(formToMap(usersUpdate));
+  } catch (e) {
+    print("Problemos");
+    print(e);
+    return false;
+  }
+  return true;
+}
+
+bool addUserToUsers(
+    FirebaseFirestore db1, String compName, List<formField> UserData) {
+  List<formField> usersUpdate = [];
+  for (var f in UserData) {
+    usersUpdate.add(f);
+  }
+  // UserData;
+  //dodawanie pól niezbędnych w bazie a niezaleznych od inputu uzytkownika
+  usersUpdate.add(formField("wfp_admin", false, "B"));
+  usersUpdate[usersUpdate.length - 1].inpCtrl.text = "0";
+  usersUpdate.add(formField("Nazwa Firmy", false, "S"));
+  usersUpdate[usersUpdate.length - 1].inpCtrl.text = compName;
+  usersUpdate.add(formField("Administrator", false, "B"));
+  usersUpdate[usersUpdate.length - 1].inpCtrl.text = "0";
+
+  try {
+    db1
+        .collection("uzytkownicy")
+        .doc(UserData[2].inpCtrl.text)
+        .set(formToMap(usersUpdate));
+  } catch (e) {
+    print("Problemos");
+    print(e);
+    return false;
+  }
+  return true;
 }
