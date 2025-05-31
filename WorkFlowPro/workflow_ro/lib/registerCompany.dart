@@ -9,8 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/main.dart';
-import 'package:workflow_ro/registerEmployee.dart';
-import 'package:workflow_ro/userProfile.dart';
 
 class registerCompScreen extends StatefulWidget {
   final User user;
@@ -37,7 +35,7 @@ class _registerCompScreenState extends State<registerCompScreen>
     return SafeArea(
       child: Scaffold(
         appBar: defaultAppBar(
-            context, registerEmployeeScreen(user: user), "Dodawanie Organizacji"),
+            context, "Dodawanie Organizacji"),
         body: Container(
           width: screenWidth,
           child: Column(
@@ -47,7 +45,7 @@ class _registerCompScreenState extends State<registerCompScreen>
                   decoration: BoxDecoration(
                       color: Colors.amber,
                       border: Border(
-                          bottom: BorderSide(width: 1, color: secColor))),
+                          bottom: BorderSide(width: 1, color: secColor))), 
                   height: screenHeight * 0.15,
                   width: screenWidth,
                   child: Row(

@@ -2,6 +2,7 @@
 //przeróżne funkcje i zmienne tutaj, zeby byl wiekszy porzadek
 // ignore_for_file: unused_import
 
+import 'dart:async';
 import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,7 +26,7 @@ TextStyle Oswald([TextStyle TS = const TextStyle()]) {
 class localUserData {
   String username;
   String email;
-  bool admin = false;
+  bool admin;
   String nazwaFirmy;
   int numerKontaktowy;
   String stanowisko;
@@ -37,13 +38,15 @@ class localUserData {
 Future<localUserData> userToUserData(User user) async {
   DocumentSnapshot userDoc =
       await db.collection("uzytkownicy").doc(user.email).get();
+  print("CzyAdmin? ${userDoc["Administrator"]}");
   localUserData ret = localUserData(
-      userDoc["Login"],
-      userDoc["Adres Email"],
-      userDoc["Nazwa Firmy"],
-      userDoc["Numer Kontaktowy"],
-      userDoc["Stanowisko"],
-      admin: (userDoc["Administrator"] == "true") ? true : false);
+    userDoc["Login"],
+    userDoc["Adres Email"],
+    userDoc["Nazwa Firmy"],
+    userDoc["Numer Kontaktowy"],
+    userDoc["Stanowisko"],
+    admin: userDoc["Administrator"],
+  );
 
   return ret;
 }
@@ -67,23 +70,8 @@ ListTile tab(String title, Icon leading, [List<Widget>? childrenz]) {
   return ret;
 }
 
-AppBar defaultAppBar(context, screen, String title) {
+AppBar defaultAppBar(context, String title) {
   return AppBar(
-      leading: IconButton(
-          onPressed: () {
-            {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (c, a1, a2) => screen,
-                  transitionsBuilder: (c, anim, a2, child) =>
-                      FadeTransition(opacity: anim, child: child),
-                  transitionDuration: Duration(milliseconds: 500),
-                ),
-              );
-            }
-          },
-          icon: Icon(Icons.arrow_back)),
       title: Text(title, style: Oswald(TextStyle(color: textColor))),
       centerTitle: true,
       backgroundColor: background,
@@ -248,4 +236,136 @@ bool addUserToUsers(
     return false;
   }
   return true;
+}
+
+String formatTimestamp(dynamic timestamp) {
+  if (timestamp is Timestamp) {
+    DateTime date = timestamp.toDate();
+    String day = date.day.toString().padLeft(2, '0'); // Dodanie zera do dnia
+    String month =
+        date.month.toString().padLeft(2, '0'); // Dodanie zera do miesiąca
+    String year = date.year.toString();
+
+    return "$day.$month.$year";
+  }
+  return "Brak daty";
+}
+
+Future<bool> aus(context, String text, {bool def = false}) async {
+  final Completer<void> completer = Completer<void>();
+  bool ret = def;
+  SnackBar sb = SnackBar(
+      content: Container(
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          text,
+          style: Oswald(),
+        ),
+        MaterialButton(
+          color: Colors.red,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          onPressed: () {
+            ret = true;
+            completer.complete();
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          },
+          child: Text(
+            "Tak",
+            style: Oswald(),
+          ),
+        ),
+      ],
+    ),
+  ));
+
+  ScaffoldMessenger.of(context).showSnackBar(sb);
+  await completer.future;
+
+  return ret;
+}
+
+String getCurrentTimestamp() {
+  DateTime now = DateTime.now();
+  String day = now.day.toString().padLeft(2, '0');
+  String month = now.month.toString().padLeft(2, '0');
+  String year = now.year.toString();
+  return "$day.$month.$year";
+}
+
+Future<List<String>?> showDialogSelectUsers(
+    BuildContext context, String organizationId, List<String>? selectedLogins) {
+    selectedLogins ??= [];
+  return showDialog<List<String>>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Wybierz użytkowników"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection("organizacje")
+                .doc(organizationId)
+                .collection("users")
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Text("Błąd: ${snapshot.error}");
+              }
+
+              final users = snapshot.data!.docs;
+
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index].data() as Map<String, dynamic>;
+                  final login = user['Login'];
+                  final stanowisko = user['Stanowisko'];
+                  final email = user['Adres Email'];
+
+                  return StatefulBuilder(
+                    builder: (context, setState) {
+                      final isSelected = selectedLogins!.contains(email);
+                      return CheckboxListTile(
+                        title: Text("$login - $stanowisko"),
+                        subtitle: Text(email),
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              selectedLogins!.add(email);
+                            } else {
+                              selectedLogins!.remove(email);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: Text("Anuluj"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, selectedLogins),
+            child: Text("Dalej"),
+          ),
+        ],
+      );
+    },
+  );
 }

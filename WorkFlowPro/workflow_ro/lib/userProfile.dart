@@ -5,7 +5,6 @@ import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/logowanie.dart';
 import 'package:workflow_ro/main.dart';
 import 'package:invert_colors/invert_colors.dart';
-import 'package:workflow_ro/registerCompany.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -39,7 +38,7 @@ class _profileScreenState extends State<profileScreen> {
       child: Scaffold(
           backgroundColor: background,
           appBar:
-              defaultAppBar(context, registerCompScreen(user: user), "Profil"),
+              defaultAppBar(context, "Profil"),
           body: Container(
             width: screenWidth,
             child: Column(
@@ -147,7 +146,7 @@ class _profileScreenState extends State<profileScreen> {
                   ),
                 ),
                 SizedBox(
-                  height: screenHeight * 0.11,
+                  height: screenHeight * 0.07,
                 ),
                 GestureDetector(
                   onTap: () {

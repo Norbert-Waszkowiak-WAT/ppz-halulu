@@ -1,10 +1,12 @@
 // ignore_for_file: camel_case_types, avoid_unnecessary_containers, prefer_const_constructors
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:workflow_ro/registerCompany.dart';
+import 'package:workflow_ro/mainScreenHandler.dart';
+import 'package:workflow_ro/projects.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -16,7 +18,8 @@ class logowanieScreen extends StatefulWidget {
 }
 
 class _logowanieScreenState extends State<logowanieScreen> {
-  TextEditingController login = TextEditingController(text: "madebysnl@gmail.com");
+  TextEditingController login =
+      TextEditingController(text: "madebysnl@gmail.com");
   TextEditingController pass = TextEditingController(text: "Qwerty123!@#");
 
   static Future<User?> loginUsingEmailPassword(
@@ -61,11 +64,13 @@ class _logowanieScreenState extends State<logowanieScreen> {
                 Container(
                     child: Text(
                   "WorkFlowPro",
-                  style: Oswald( TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 32,
-                    color: textColor,
-                  ),),
+                  style: Oswald(
+                    TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 32,
+                      color: textColor,
+                    ),
+                  ),
                 )),
                 SizedBox(
                   height: MediaQuery.of(context).size.height * 0.25,
@@ -115,26 +120,56 @@ class _logowanieScreenState extends State<logowanieScreen> {
 
                       if (user != null) {
                         localUser = await userToUserData(user);
-                        print(user);
                         final usersBase = db.collection("uzytkownicy");
                         final userProf = usersBase.doc(login.text);
+                        FirebaseMessaging messaging =
+                            FirebaseMessaging.instance;
+                        String? token = await messaging.getToken();
+                        await FirebaseFirestore.instance
+                            .collection('uzytkownicy')
+                            .doc(login.text)
+                            .update({'fcmToken': token});
                         userProf.get().then((DocumentSnapshot doc) {
                           final data = doc.data() as Map<String, dynamic>;
 
-                          if (data["wfp_admin"]) {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder: (c, a1, a2) => registerCompScreen(
-                                  user: user,
+                          if (pendingRedirect != null) {
+                            final selectedDate =
+                                DateTime.tryParse(pendingRedirect!['date']!);
+                            final org = localUser!.nazwaFirmy;
+                            print("organizacja: $org");
+                            print(selectedDate);
+                            if (selectedDate != null && org != null) {
+                              print("pass");
+                              Navigator.of(context)
+                                  .pushReplacement(MaterialPageRoute(
+                                builder: (_) => ProjectsScreen(
+                                  organization: org,
+                                  locUser: localUser!,
+                                  selectedDate: selectedDate,
                                 ),
-                                transitionsBuilder: (c, anim, a2, child) =>
-                                    FadeTransition(opacity: anim, child: child),
-                                transitionDuration: Duration(milliseconds: 500),
-                              ),
-                            );
+                              ));
+//zyść po przekierowaniu
+                            }
                           } else {
-                            //navigator -> strona glowna
+                            if (data["wfp_admin"]) {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (c, a1, a2) =>
+                                      mainScreensHandler(
+                                          user: user,
+                                          organization: localUser!.nazwaFirmy,
+                                          locUser: localUser!),
+                                  transitionsBuilder: (c, anim, a2, child) =>
+                                      FadeTransition(
+                                          opacity: anim, child: child),
+                                  transitionDuration:
+                                      Duration(milliseconds: 500),
+                                ),
+                              );
+                            } else {
+                              //navigator -> strona glowna
+                            }
                           }
                         },
                             onError: (e) => print(

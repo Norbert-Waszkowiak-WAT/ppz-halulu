@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:workflow_ro/fav.dart';
 import 'package:workflow_ro/main.dart';
-import 'package:workflow_ro/userProfile.dart';
 
 class registerEmployeeScreen extends StatefulWidget {
   final User user;
@@ -36,8 +35,6 @@ class _registerEmployeeScreenState extends State<registerEmployeeScreen>
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: defaultAppBar(
-            context, profileScreen(user: user), "Dodawanie Pracownika"),
         body: Container(
           width: screenWidth,
           child: Column(
@@ -139,7 +136,7 @@ class _registerEmployeeScreenState extends State<registerEmployeeScreen>
                       16,
                     )),
                 width: screenWidth * 0.95,
-                height: screenHeight * 0.6,
+                height: screenHeight * 0.37,
                 child: SingleChildScrollView(
                   //
                   child: Column(
@@ -155,20 +152,19 @@ class _registerEmployeeScreenState extends State<registerEmployeeScreen>
                 ),
               ),
               SizedBox(
-                height: screenHeight * 0.03,
+                height: screenHeight * 0.20,
               ),
               Container(
                 child: OutlinedButton(
                   onPressed: () {
                     List<formField> toAdd = userFormFields;
+                    // ignore: unused_local_variable
                     bool success =
                         (addUserToUsers(db, localUser!.nazwaFirmy, toAdd) &&
                             addUserToCompany(db, localUser!.nazwaFirmy, toAdd));
-                    print("addutu");
-                    print(success);
                   },
                   child: Text(
-                    "Dodaj Organizację",
+                    "Dodaj Pracownika",
                     style: TextStyle(fontSize: screenWidth * 0.07),
                   ),
                 ),
